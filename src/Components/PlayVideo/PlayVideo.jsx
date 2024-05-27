@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import './PlayVideo.css'
 
 import video1 from '../../assets/video.mp4'
@@ -8,74 +8,97 @@ import share from '../../assets/share.png'
 import save from '../../assets/save.png'
 import jack from '../../assets/jack.png'
 import user_profile from '../../assets/user_profile.jpg'
+import { API_KEY, value_converter } from '../../data'
 
-const PlayVideo = () => {
+import moment from 'moment'
+
+const PlayVideo = ({videoId}) => {
+
+    const [apiData,setApiData] = useState(null);
+
+    const [channelData,setChannelData] = useState(null);
+
+    const [commentData,setCommentData] = useState([]);
+
+    //fetching video data
+    const fetchVideoData = async () =>{
+        const videoDetails_url = `https://youtube.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&id=${videoId}&key=${API_KEY}`;
+        await fetch(videoDetails_url)
+            .then(res=>res.json())
+            .then(data=>setApiData(data.items[0]))
+    }
+    //to run this func- useeffect
+    useEffect(()=> {
+        fetchVideoData();
+    },[])
+
+    // fetching channel data
+    const fetchOtherData = async () => {
+        const channelData_url = `https://youtube.googleapis.com/youtube/v3/channels?part=snippet%2CcontentDetails%2Cstatistics&id=${apiData.snippet.channelId}&key=${API_KEY}`;
+        await fetch(channelData_url)
+            .then(res=>res.json())
+            .then(data=>setChannelData(data.items[0]))
+
+        //fetching comment data
+        const comment_url = `https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=${videoId}&key=${API_KEY}`
+        await fetch(comment_url)
+            .then(res=>res.json())
+            .then(data=>setCommentData(data.items))    
+    }
+
+    useEffect(() => {
+        fetchOtherData();
+    },[apiData])
+
+
+
   return (
     <div className='play-video'>
-        <video src={video1} controls autoPlay muted></video>
-        <h3>Best Channel to learn</h3>
+        {/* <video src={video1} controls autoPlay muted></video> */}
+        <iframe src={`https://www.youtube.com/embed/${videoId}?autoplay=1`} frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        <h3>{apiData?apiData.snippet.title:"Title here"}</h3>
         <div className="play-video-info">
-            <p>1554 Views &bull; 2 days ago</p>
+            <p>{apiData?value_converter(apiData.statistics.viewCount):"16k"} Views &bull; {apiData?moment(apiData.snippet.publishedAt).fromNow():""}</p>
             <div>
-                <span><img src={like} alt="" />125</span>
-                <span><img src={dislike} alt="" />2</span>
+                <span><img src={like} alt="" />{apiData?value_converter(apiData.statistics.likeCount):""}</span>
+                <span><img src={dislike} alt="" /></span>
                 <span><img src={share} alt="" />Share</span>
                 <span><img src={save} alt="" />Save</span>
             </div>
         </div>
         <hr />
         <div className="publisher">
-            <img src={jack} alt="" />
+            <img src={channelData?channelData.snippet.thumbnails.default.url:""} alt="" />
             <div>
-                <p>Great Stack</p>
-                <span>1M Subscribers</span>
+                <p>{apiData?apiData.snippet.channelTitle:""}</p>
+                <span>{value_converter(channelData?channelData.statistics.subscriberCount:"1M")} Subscribers</span>
             </div>
             <button>Subscribe</button>
         </div>
         <div className="vid-description">
-            <p>Channel that makes</p>
-            <p>Subscribe GreatStack to Watch More Tutorials</p>
+            <p>{apiData?apiData.snippet.description.slice(0,150):"Description Here"}</p>
+            
             <hr />
-            <h4>130 Comments</h4>
-            <div className="comment">
-                <img src={user_profile} alt="" />
-                <div>
-                    <h3>Jack Michael <span> 1 day ago </span> </h3>
-                    <p>A globla computer network providing a variety of information</p>
-                    <div className="comment-action">
-                        <img src={like} alt="" />
-                        <span>244</span>
-                        <img src={dislike} alt="" />
-                        <span>7</span>
+            <h4>{apiData?value_converter(apiData.statistics.commentCount):10} Comments</h4>
+            {commentData.map((item,index) => {
+
+                return (
+                    <div key={index} className="comment">
+                        <img src={item.snippet.topLevelComment.snippet.authorProfileImageUrl} alt="" />
+                        <div>
+                            <h3>{item.snippet.topLevelComment.snippet.authorDisplayName} <span> {moment(item.snippet.topLevelComment.snippet.publishedAt).fromNow()} </span> </h3>
+                            <p>{item.snippet.topLevelComment.snippet.textDisplay}</p>
+                            <div className="comment-action">
+                                <img src={like} alt="" />
+                                <span>{value_converter(item.snippet.topLevelComment.snippet.likeCount)}</span>
+                                <img src={dislike} alt="" />
+                                <span></span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <div className="comment">
-                <img src={user_profile} alt="" />
-                <div>
-                    <h3>Anderson <span> 4 day ago </span> </h3>
-                    <p>A globla computer network providing a variety of information</p>
-                    <div className="comment-action">
-                        <img src={like} alt="" />
-                        <span>33</span>
-                        <img src={dislike} alt="" />
-                        <span>1</span>
-                    </div>
-                </div>
-            </div>
-            <div className="comment">
-                <img src={user_profile} alt="" />
-                <div>
-                    <h3>Jack Michael <span> 1 day ago </span> </h3>
-                    <p>A globla computer network providing a variety of information</p>
-                    <div className="comment-action">
-                        <img src={like} alt="" />
-                        <span>244</span>
-                        <img src={dislike} alt="" />
-                        <span>67</span>
-                    </div>
-                </div>
-            </div>
+                )
+            })}
+            
         </div>
       
     </div>
