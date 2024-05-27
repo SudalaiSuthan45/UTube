@@ -12,7 +12,8 @@ nav {
     margin-right: 25px;
 }
 .nav-left .logo{
-    width: 150px;
+    width: 100px;
+    border-radius: 20%;
 }
 
 .nav-middle .search-box{

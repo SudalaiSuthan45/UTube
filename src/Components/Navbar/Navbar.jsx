@@ -1,14 +1,14 @@
 import React from 'react'
 import './Navbar.css'
 import menuicon from '../../assets/menu.png'
-import logo from '../../assets/logo.png'
+import logo from '../../assets/utube_logo.png'
 
 import search_icon from '../../assets/search.png'
 
 import upload_icon from '../../assets/upload.png'
 import more_icon from '../../assets/more.png'
 import notification_icon from '../../assets/notification.png'
-import profile from '../../assets/jack.png'
+import profile from '../../assets/user_profile.jpg'
 import { Link } from 'react-router-dom'
 
 const Navbar = ({setSidebar}) => {
